@@ -2183,7 +2183,16 @@ void ONNXImporter::parseFlatten(LayerParams& layerParams, const opencv_onnx::Nod
         {
             constBlobsExtraInfo.insert(std::make_pair(node_proto.output(0), getBlobExtraInfo(node_proto, 0)));
         }
-        int axis = normalize_axis(axis_, input.dims);
+        int input_dims = input.dims;
+        int axis = axis_;
+        if (axis < 0) 
+        {
+            axis += input_dims;
+        }
+        if (axis < 0 || axis > input_dims)
+        {
+            CV_Error(Error::StsOutOfRange, "Axis value out of range");
+        }
 
         int out_size[2] = {1, 1};
         for (int i = 0; i < axis; ++i)
@@ -2202,7 +2211,16 @@ void ONNXImporter::parseFlatten(LayerParams& layerParams, const opencv_onnx::Nod
     IterShape_t shapeIt = outShapes.find(node_proto.input(0));
     CV_Assert(shapeIt != outShapes.end());
     MatShape inpShape = shapeIt->second;
-    int axis = normalize_axis(axis_, inpShape.size());
+    int input_dims = inpShape.size();
+    int axis = axis_;
+    if (axis < 0)
+    {
+        axis += input_dims;
+    }
+    if (axis < 0 || axis > input_dims)
+    {
+        CV_Error(Error::StsOutOfRange, "Axis value out of range");
+    }    
 
     if (axis == 0 || axis == inpShape.size())
     {
